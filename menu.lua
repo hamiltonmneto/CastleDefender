@@ -1,25 +1,23 @@
-local composer = require( "composer" )
+local composer = require("composer")
 
 local scene = composer.newScene()
 
-local centerX = display.contentCenterX
-local centerY = display.contentCenterY
-
 local function gotoGame()
-	composer.gotoScene("game")
+	composer.gotoScene("game",{time=800, effect="crossFade"})
 end
 
 function scene:create( event )
 	local sceneGroup = self.view
-	local gameOverText = display.newText("Game Over", 70, 80, native.systemFontBold, 60)
-	gameOverText:setFillColor( 0, 0, 0 )
-	gameOverText.x = display.contentCenterX
-	gameOverText.y = 100
-	local tryAgainButton = display.newImageRect( sceneGroup, "try_again.png",110,50 )
-	tryAgainButton.x = display.contentCenterX
-	tryAgainButton.y = display.contentCenterY
-	tryAgainButton:addEventListener("tap", gotoGame)
+	--background = display.newImageRect( sceneGroup, "background_menu.png",600,400)
+	--background.x = display.contentCenterX
+	--background.y = display.contentCenterY
+
+	local playButton = display.newImageRect( sceneGroup, "start_button.png",110,50 )
+	playButton.x = display.contentCenterX
+	playButton.y = display.contentCenterY
+	playButton:addEventListener("tap", gotoGame)
 end
+
 
 -- hide()
 function scene:hide( event )
