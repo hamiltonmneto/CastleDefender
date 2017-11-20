@@ -2,8 +2,6 @@ local composer = require( "composer" )
 
 local scene = composer.newScene()
 
-local centerX = display.contentCenterX
-local centerY = display.contentCenterY
 
 local function gotoGame()
 	composer.gotoScene("game")

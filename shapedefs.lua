@@ -26,7 +26,7 @@ function M.physicsData(scale)
                     
                     
                     {
-                    pe_fixture_id = "wall", density = 1, friction = 0.5, bounce = 0.19999999999999998, 
+                    pe_fixture_id = "wall", density = 1, friction = 0.5,  
                     filter = { categoryBits = 1, maskBits = 65535, groupIndex = 0 },
                     shape = {   -14.5, 14.5  ,  -14.5, -14.5  ,  14.5, -14.5  ,  14.5, 14.5  }
                     }
@@ -140,7 +140,7 @@ function M.physicsData(scale)
                     
                     
                     {
-                    pe_fixture_id = "enemy", density = 1, friction = 0.2, bounce = 1, 
+                    pe_fixture_id = "enemy", density = 1, friction = 0.2,  
                     filter = { categoryBits = 1, maskBits = 65535, groupIndex = 0 },
                     radius = 13.098
                     }

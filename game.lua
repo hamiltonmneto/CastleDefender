@@ -10,10 +10,12 @@ local widget = require( "widget" )
 physics.start()
 physics.setGravity( 0, 100 )
 --physics.setDrawMode("hybrid")
+math.randomseed(os.time())
 
 
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
+
 
 -- set up forward references
 local background
@@ -37,11 +39,14 @@ local castleLife = 20
 local castleLifeText
 local enemySpawn
 local moneyText
-local waveStatus = display.newText("Wave Done!", centerX, 80, native.systemFontBold, 60)
+local waveStatus = display.newText("", centerX, 80, native.systemFontBold, 60)
 local enemy
 local enemy02
-
-
+local enemiesTable = {}
+local wallTable = {}
+local totalMoney = 80
+local mainGroup
+local characterGroup
 --Enemies Sprite Sheets
 local enemy01SheetData = {
 	width = 40,
@@ -96,24 +101,26 @@ local totalEnemiesWave = 35
 
 --Countdown 
 local countDownTimer
-local secondsLeft = 3
-local clockText = display.newText("3", display.contentCenterX, 80, native.systemFontBold, 60)
-clockText:setFillColor( 0.7, 0.7, 1 )
+local secondsLeft = 4
+local clockText
+local clockImg
 
 function spawnEnemy()
 	
 	for i=1,numberEnemies do
-		enemy = display.newSprite(enemy01Sheet, enemy01SequenceData)
+		enemy = display.newSprite(mainGroup,enemy01Sheet, enemy01SequenceData)
 		physics.addBody(enemy,"dynamic",physicsData:get("enemy"))
 		enemy:addEventListener("tap",enemyKill)
 		enemy.gravityScale = -0
 		enemy.isFixedRotation = true
 		enemy.type = "enemy"
+		enemy.enterFrame = onEnterFrame
+		Runtime:addEventListener( "enterFrame", enemy )
 		local speed = 0.1
 		enemy.collision = enemyTreeCollision
 		enemy:addEventListener("collision",enemy)
 		enemy:play()
-		
+		table.insert(enemiesTable,enemy)
 		if math.random(2) == 1 then
 			enemy.x = math.random(-100, -10)
 			
@@ -131,7 +138,6 @@ function spawnEnemy()
 		enemy02:addEventListener("tap",enemyKill)
 		--enemy02.gravityScale = -0
 		--enemy02.isFixedRotation = true
-		--enemy02.type = "enemy"
 		--enemy02.collision = enemyTreeCollision
 		--enemy02:addEventListener("collision",enemy02)
 		--local speed = 0.1
@@ -144,14 +150,15 @@ function spawnEnemy()
 			enemy02.x = math.random (display.contentWidth + 10, display.contentWidth + 100)
 			enemy02.xScale = -1
 		end
-			enemy02.tran = transition.to(enemy02, {x=castle.x, y=castle.y, time=5000, onComplete=hitCastle})
-			enemy02.y = math.random(display.contentHeight)
-			--enemy02:setLinearVelocity((castle.x - enemy02.x) * speed,(castle.y - enemy02.y) * speed)
-
+		enemy02.tran = transition.to(enemy02, {x=castle.x, y=castle.y, time=5000, onComplete=hitCastle})
+		enemy02.y = math.random(display.contentHeight)
+		--enemy02:setLinearVelocity((castle.x - enemy02.x) * speed,(castle.y - enemy02.y) * speed)
+		totalEnemiesSpawmed = totalEnemiesSpawmed + 1
+		numberEnemies = numberEnemies + 1
 	end
 	if currentWave == 10 then
 		--BOSS WILL BE HERE
-		enemy03 = display.newSprite(enemy03Sheet, enemy03SequenceData)
+		enemy03 = display.newSprite(mainGroup,enemy03Sheet, enemy03SequenceData)
 		physics.addBody(enemy03,"dynamic",physicsData:get("enemy"))
 		enemy03:addEventListener("tap",enemyKill)
 		enemy03.gravityScale = -0
@@ -171,72 +178,31 @@ function spawnEnemy()
 		end
 			enemy03.y = math.random(display.contentHeight)
 			enemy03:setLinearVelocity((castle.x - enemy03.x) * speed,(castle.y - enemy03.y) * speed)
+		totalEnemiesSpawmed = totalEnemiesSpawmed + 1
+		numberEnemies = numberEnemies + 1
 	end
 	enemySpawn = timer.performWithDelay( 10000, spawnEnemy)
 	numberEnemies = numberEnemies + 1
 	branches_02:toFront()
 	branches_01:toFront()
-	enemy.enterFrame = onEnterFrame
-	--Runtime:addEventListener( "enterFrame", enemy )
 	scoreText:toFront()
 	waveText:toFront()
 	moneyText:toFront()
 	if(totalEnemiesSpawmed >= totalEnemiesWave) then
 		timer.cancel(enemySpawn)
 	end
-	
-end
-	
-
-	
-
-local function createPlaySreen()
-	background = display.newImage("level01_2.png")
-	background.x =  centerX 
-	background.y =  centerY
-	scoreText = display.newText("Score: ",-30, 0, native.systemFontBold, 20)
-	scoreText.text = "Score: " .. score
-
-	castleLifeText = display.newText("Health: ",190, 0, native.systemFontBold, 20)
-	castleLifeText.text = "Health: " .. castleLife
-
-	moneyText = display.newText("Money: ",420, 0, native.systemFontBold, 20)
-	moneyText.text = "Money: " .. money
-
-	local trunk_01 = display.newImage("trunk.png")
-	trunk_01.x = 400
-	trunk_01.y = 270
-	trunk_01.type = "tree"
-	physics.addBody(trunk_01, "static", physicsData:get("trunk"))
-	branches_01 = display.newImage("branches.png")
-	branches_01.x = 400
-	branches_01.y = 235
-	branches_01:toFront()
-
-	local trunk_02 = display.newImage("trunk.png")
-	trunk_02.y = 97
-	trunk_02.type = "tree"
-	physics.addBody(trunk_02, "static", physicsData:get("trunk"))
-	branches_02 = display.newImage("branches.png")
-	branches_02:toFront()
-
-	castle = display.newImage("castleMenor.png")
-	physics.addBody(castle, "static")
-	castle.type = "castle"
-	castle.x = 230
-	castle.y = 120
-	waveText = display.newText("Wave: ", -30, 290, native.systemFontBold, 20)
-	waveText.text ="Wave: " .. currentWave 
 
 end
+	
 
-local function spawnWall(event)
+function spawnWall(event)
 	--Create walls
 	if money >= 20 then
 		if ( "began" == event.phase ) then
 		characterGroup = display.newGroup()
 		characterGroup.x = centerX
 		characterGroup.y = centerY
+		mainGroup:insert(characterGroup)
 		wall = display.newImage("wall.png")
 		wall.x = 0
 		wall.y = 0
@@ -253,23 +219,30 @@ local function spawnWall(event)
 		characterGroup.collision = wallCollision
 		characterGroup:addEventListener("collision", characterGroup)
 		money = money - 20
-		moneyText.text = "Money: " .. money 
+		moneyText.text = "Money: " .. money
 
+		table.insert(wallTable, characterGroup)
+		characterGroup:addEventListener( "touch", moveWall )
 		end
 	else
 		print("INSUFICIENT MONEY")
 	end
-	branches_02:toFront()
-	branches_01:toFront()
-	characterGroup:addEventListener( "touch", moveWall )
+	
 	return true
 end
 
-local function onEnterFrame( self, event )
-	print("Saiu do Frame")
-   if( x < 0 or x > 320 or y < 0 or y < 480) then
+function onEnterFrame( self, event )
+   if( self.x < -100 or self.x > 575) then
+   	  print("Saiu do Frame X")
       Runtime:removeEventListener( "enterFrame", self )
       display.remove( self )
+      enemiesKilled = enemiesKilled + 1
+   end
+   if (self.y < -60 or self.y > 320) then
+   	print("Saiu do frame Y")
+   	  Runtime:removeEventListener( "enterFrame", self )
+      display.remove( self )
+      enemiesKilled = enemiesKilled + 1
    end
 end
 
@@ -277,34 +250,39 @@ end
 function enemyKill(event)
 	local numSpawn = 0
 	local enemy = event.target
+	Runtime:removeEventListener( "enterFrame", enemy )
 	display.remove(enemy)
 	transition.cancel ( event.target.trans )
 	score = score + 1
 	enemiesKilled = enemiesKilled + 1
 	scoreText.text = "Score: " .. score
+	totalMoney = totalMoney + 2
 	money = money + 2
 	moneyText.text = "Money: " .. money
-	clockText.text = nil
 	waveStatus.text = ""
+	if clockImg ~= nil then
+		clockImg:removeSelf()
+		clockImg = nil
+	end
+	if currentWave >= 5 then
+		enemy02.tran = transition.to(enemy02, {x=castle.x, y=castle.y, time=4000, onComplete=hitCastle})
+	end
+	print("Total de inimigos Spamados:" .. totalEnemiesSpawmed)
+	print("Numero maximo de inimigos para proxima wave: " .. totalEnemiesWave)
+	print("Total de inimigos mortos: " .. enemiesKilled)
 	if totalEnemiesSpawmed >= totalEnemiesWave then
 		if enemiesKilled >= totalEnemiesSpawmed then
-			waveStatus = display.newText("Wave Done!", centerX, 80, native.systemFontBold, 60)
-			waveStatus.x = centerX
-			waveStatus:setFillColor( 0.7, 0.7, 1 )
-			transition.fadeOut(waveStatus,{time = 1000})
+			clockImg = display.newImage("waveDone.png")
+			clockImg.x = centerX
+			transition.fadeOut(clockImg,{time = 1000})
 			currentWave = currentWave + 1
 			showButtons()
 			secondsLeft = 4
 			enemiesKilled = 0
 			totalEnemiesSpawmed = 0
 			totalEnemiesWave = totalEnemiesWave + 5
-			clockText.text = ""
 		end
 	end
-	if currentWave == 5 then
-		enemy02.tran = transition.to(enemy02, {x=castle.x, y=castle.y, time=4000, onComplete=hitCastle})
-	end
-		Runtime:addEventListener( "enterFrame", enemy )
 	return true
 end
 
@@ -317,7 +295,7 @@ function wallCollision(self, event)
 	if event.phase == "began" then
 		if event.target.type == "wall" and event.other.type == "enemy" then
 			if(self.currentHealth > 0) then 
-				self.currentHealth = self.currentHealth - 0.3
+				self.currentHealth = self.currentHealth - 0.2
 				if(self.currentHealth <= 0) then
 					display.remove(self)
 				end
@@ -374,12 +352,16 @@ function moveWall( event )
 	local touchedWall = event.target
 
 	if event.phase == "began" then
-		touchedWall.previousX = touchedWall.x
-		touchedWall.previousY = touchedWall.y
+		display.getCurrentStage():setFocus(touchedWall)
+		touchedWall.startMoveX = touchedWall.x
+		touchedWall.startMoveY = touchedWall.y
 	elseif event.phase == "moved" then
-		touchedWall.x = (event.x - event.xStart) + touchedWall.previousX
-		touchedWall.y = (event.y - event.yStart) + touchedWall.previousY
+		touchedWall.x = (event.x - event.xStart) + touchedWall.startMoveX
+		touchedWall.y = (event.y - event.yStart) + touchedWall.startMoveY
+	elseif event.phase == "ended" or event.phase == "cancelled" then
+		display.getCurrentStage():setFocus(nil)
 	end
+	return true
 end
 
 
@@ -387,27 +369,29 @@ function gameOver()
 	physics.pause()
 	castleLife = 0
 	timer.cancel(enemySpawn)
-	local shade = display.newRect( -50, 0, 600, 320 )
-	shade:setFillColor( 0, 0, 0)
-	shade.alpha = 0.1
-	transition.fadeIn(shade,{time=2000})
-	--composer.gotoScene("game_over",{time = 800, effect = "crossFade"})
-	--composer.gotoScene("game_over")
-	local gameOverText = display.newText("Game Over", 70, 80, native.systemFontBold, 60)
+	composer.setVariable("totalMoney", totalMoney)
+	composer.setVariable("finalScore", score)
+	composer.removeScene("menu")
+	composer.removeScene("game")
+	composer.gotoScene("game-over",{time = 800, effect = "crossFade"})
 	Runtime:removeEventListener( "tap",enemyKill )
 end
 
-
 function updateTime()
 	secondsLeft = secondsLeft - 1
-	transition.fadeIn(clockText, {time = 1})
+	if secondsLeft > 0 then
+	clockImg = display.newImage(secondsLeft..".png")
+	clockImg.x = centerX
+		transition.fadeOut(clockImg, {time = 1000})
+	end
 	 
 	local timeDisplay = secondsLeft
-	clockText.text = timeDisplay
 	if secondsLeft == 0 then
-		clockText.text = "START"
+		clockImg = display.newImage("start.png")
+		clockImg.x = centerX
+		clockImg.y = 130
 		timer.cancel(countDownTimer)
-		transition.fadeOut(clockText,{time = 1000})
+		transition.fadeOut(clockImg,{time = 1000})
 		spawnEnemy()
 	end
 end
@@ -415,23 +399,25 @@ end
 function showButtons()
 	tower_btn.isVisible = true
 	playButton.isVisible = true
-	clockText.text = 3
-	clockText:setFillColor( 0.7, 0.7, 1 )
 	waveText.text ="Wave: " .. currentWave
 end
 
---TODO: Game sctrucure goes here
+
 function startGame()
+	physics.start()
 	countDownTimer = timer.performWithDelay( 1000, updateTime, 0)
-	clockText:toFront()
 	tower_btn.isVisible = false
 	playButton.isVisible = false
-	--characterGroup:removeEventListener( "touch", moveWall )
+
+	for i = #wallTable, 1, -1 do
+		local thisWall = wallTable[i]
+		thisWall:removeEventListener( "touch", moveWall)
+	end
+	wallTable = {}
 end
 
 
 function towerBuilder()
-	createPlaySreen()
 	tower_btn = widget.newButton( {
  	id = "wall_button",
     defaultFile = "wall_button.png",
@@ -451,6 +437,7 @@ end
 
 function hitCastle(obj)
 	display.remove(obj)
+	Runtime:removeEventListener( "enterFrame", obj )
 	castleLife = castleLife - 1
 	castleLifeText.text = "Health: " .. castleLife
 	enemiesKilled = enemiesKilled + 1
@@ -461,27 +448,91 @@ function hitCastle(obj)
 	end
 	if totalEnemiesSpawmed >= totalEnemiesWave then
 		if enemiesKilled >= totalEnemiesSpawmed then
-			waveStatus = display.newText("Wave Done!", centerX, 80, native.systemFontBold, 60)
-			waveStatus.x = centerX
-			waveStatus:setFillColor( 0.7, 0.7, 1 )
-			transition.fadeOut(waveStatus,{time = 1000})
+			clockImg = display.newImage("waveDone.png")
+			clockImg.x = centerX
+			transition.fadeOut(clockImg,{time = 1000})
 			currentWave = currentWave + 1
 			showButtons()
 			secondsLeft = 4
 			enemiesKilled = 0
 			totalEnemiesSpawmed = 0
 			totalEnemiesWave = totalEnemiesWave + 5
-			clockText.text = ""
 		end
 	end
 end
 
-
 function scene:create( event )
 	local sceneGroup = self.view
 
-	towerBuilder()
+	physics.pause()
+  
+  --Set up display groups
+  backGroup = display.newGroup() --Display group for background image
+  sceneGroup:insert(backGroup)   --Insert into the scene's view group
+  
+  mainGroup = display.newGroup() --Display group for ship, laser, asteroids, etc.
+  sceneGroup:insert(mainGroup)   --Insert into the scene's view group
+  
+  uiGroup = display.newGroup()   --Display group for UI objects like lives and score
+  sceneGroup:insert(uiGroup)
+  towerBuilder()
 
+	background = display.newImageRect(backGroup,"level01_2.png",567, 320)
+	background.x =  centerX 
+	background.y =  centerY
+	scoreText = display.newText(uiGroup,"Score: ",-10, 0, native.systemFontBold, 20)
+	scoreText.text = "Score: " .. score
+
+	castleLifeText = display.newText(uiGroup,"Health: ",190, 0, native.systemFontBold, 20)
+	castleLifeText.text = "Health: " .. castleLife
+
+	moneyText = display.newText(uiGroup,"Money: ",400, 0, native.systemFontBold, 20)
+	moneyText.text = "Money: " .. money
+
+	local trunk_01 = display.newImageRect(uiGroup,"trunk.png",100,100)
+	trunk_01.x = 400
+	trunk_01.y = 270
+	trunk_01.type = "tree"
+	physics.addBody(trunk_01, "static", {radius=10})
+	branches_01 = display.newImageRect(uiGroup,"branches.png",100,120)
+	branches_01.x = 400
+	branches_01.y = 235
+	branches_01:toFront()
+
+	local trunk_02 = display.newImageRect(uiGroup,"trunk.png",100,100)
+	trunk_02.x = 50
+	trunk_02.y = 100
+	trunk_02.type = "tree"
+	physics.addBody(trunk_02, "static", {radius=10})
+	branches_02 = display.newImageRect(uiGroup,"branches.png",100,120)
+	branches_02.y = 65
+	branches_02.x = 50
+	branches_02:toFront()
+
+	castle = display.newImageRect(mainGroup,"castleMenor.png",150,150)
+	physics.addBody(castle, "static")
+	castle.type = "castle"
+	castle.x = 230
+	castle.y = 120
+	waveText = display.newText(mainGroup,"Wave: ", -10, 290, native.systemFontBold, 20)
+	waveText.text ="Wave: " .. currentWave 
+
+	TESTE = display.newText(uiGroup,"T: ",display.contentCenterX, 320, native.systemFontBold, 60)
+
+end
+
+-- show()
+function scene:show( event )
+
+	local sceneGroup = self.view
+	local phase = event.phase
+
+	if ( phase == "will" ) then
+		-- Code here runs when the scene is still off screen (but is about to come on screen)
+
+	elseif ( phase == "did" ) then
+		-- Code here runs when the scene is entirely on screen
+	end
 end
 
 -- hide()
@@ -495,7 +546,6 @@ function scene:hide( event )
 
   elseif ( phase == "did" ) then
   -- Code here runs immediately after the scene goes entirely off screen
-  composer.removeScene( "game" )
 
   end
 end
@@ -512,6 +562,7 @@ end
 -- Scene event function listeners
 -- -----------------------------------------------------------------------------------
 scene:addEventListener( "create", scene )
+scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
