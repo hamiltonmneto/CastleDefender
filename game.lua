@@ -232,7 +232,7 @@ function spawnWall(event)
 end
 
 function onEnterFrame( self, event )
-   if( self.x < -100 or self.x > 575) then
+   if( self.x < -100 or self.x > 565) then
    	  print("Saiu do Frame X")
       Runtime:removeEventListener( "enterFrame", self )
       display.remove( self )
@@ -353,11 +353,15 @@ function moveWall( event )
 
 	if event.phase == "began" then
 		display.getCurrentStage():setFocus(touchedWall)
-		touchedWall.startMoveX = touchedWall.x
-		touchedWall.startMoveY = touchedWall.y
+		if (touchedWall.x ~= nil or touchedWall.y ~= nil) then
+			touchedWall.startMoveX = touchedWall.x
+			touchedWall.startMoveY = touchedWall.y
+		end 
 	elseif event.phase == "moved" then
-		touchedWall.x = (event.x - event.xStart) + touchedWall.startMoveX
-		touchedWall.y = (event.y - event.yStart) + touchedWall.startMoveY
+		if (touchedWall.startMoveX ~= nil or touchedWall.startMoveY ~= nil) then
+			touchedWall.x = (event.x - event.xStart) + touchedWall.startMoveX
+			touchedWall.y = (event.y - event.yStart) + touchedWall.startMoveY
+		end
 	elseif event.phase == "ended" or event.phase == "cancelled" then
 		display.getCurrentStage():setFocus(nil)
 	end
